@@ -1,3 +1,4 @@
+import requests
 import random
 import socket
 import time
@@ -97,6 +98,14 @@ def gameLoop(sock):
       clients_lock.release()
       time.sleep(1/30)
 
+def requestAPI():
+   lambdaEndpoint = "https://z67un5qyea.execute-api.us-east-2.amazonaws.com/default/MatchMaking"
+   requestBody = json.dumps({"user_id": "5"})
+
+   response = requests.get(lambdaEndpoint, data=requestBody)
+   responseBody = json.loads(response.content)
+   print(responseBody)
+
 def main():
    port = 12345
    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -108,4 +117,5 @@ def main():
       time.sleep(1/30)
 
 if __name__ == '__main__':
-   main()
+   requestAPI()
+   #main()
