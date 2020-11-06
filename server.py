@@ -12,16 +12,26 @@ connected = 0
 
 clients = {}
 
-playerTiers = {500: [], 1000: [], 1500: [], 2000: [], 2500: [], 3000: []}
+class Matches:
+   numMatches = 0
+   matches = []
+
+playerTiers = {
+   500: {'waitTime' : 0, 'players' : []}, 
+   1000: {'waitTime' : 0, 'players' : []}, 
+   1500: {'waitTime' : 0, 'players' : []}, 
+   2000: {'waitTime' : 0, 'players' : []}, 
+   2500: {'waitTime' : 0, 'players' : []}, 
+   3000: {'waitTime' : 0, 'players' : []}
+   } 
 
 def connectionLoop(sock):
    while True:
       data, addr = sock.recvfrom(1024)
       data = json.loads(data)
 
-      # data = data.split(", ")
       user_profile = requestAPI(data['user_id']);
-      assignMatchRoom(user_profile)
+      assignLobbyRoom(user_profile)
 
       # if addr in clients:
       #    for params in data:
@@ -56,19 +66,6 @@ def connectionLoop(sock):
       #          new_client_m = json.dumps(GameState)
       #          sock.sendto(bytes(new_client_m, 'utf8'), addr)
 
-def assignMatchRoom(user_profile):
-
-   rankingScore = user_profile['score']
-
-   # Sort connecting clients into rooms based on their rank score
-   for tier in playerTiers.keys():
-      if int(rankingScore) <= tier:
-         playerTiers[tier].append(user_profile)
-         break
-
-   for tier in playerTiers.keys():
-      print(playerTiers[tier])
-
 def cleanClients(sock):
    while True:
       dropped_players = []
@@ -94,8 +91,59 @@ def cleanClients(sock):
       
       time.sleep(5)
 
+def assignLobbyRoom(user_profile):
+
+   rankingScore = user_profile['score']
+
+   # Sort connecting clients into rooms based on their rank score
+   for tier in playerTiers.keys():
+      if int(rankingScore) <= tier:
+
+         playerTiers[tier]['players'].append(user_profile) # Add user to tier list
+         
+         if len(playerTiers[tier]['players']) == 1:
+            playerTiers[tier]['waitTime'] = datetime.now()
+         
+         break
+
+   # for tier in playerTiers.keys():
+   #    print(playerTiers[tier])
+   #    print("")
+
+def assignMatchRoom():
+   for tier in playerTiers.keys():
+      
+      # There are more than 3 players waiting in the current tier
+      if len(playerTiers[tier]['players']) >= 3:
+         matchInfo = {"matchId" : Matches.numMatches, "players" : [], "results" : {}}
+         Matches.numMatches+=1
+
+         # Assign first 3 players from the tier to the match
+         for i in range(0, 3):
+            matchInfo["players"].append(playerTiers[tier]['players'].pop(0))
+
+         Matches.matches.append(matchInfo)
+
+      # There are two players waiting in the current tier
+      elif len(playerTiers[tier]['players']) == 2 and (datetime.now() - playerTiers[tier]['waitTime']).total_seconds() > 10:
+         matchInfo = {"matchId" : Matches.numMatches, "players" : [], "results" : {}}
+         Matches.numMatches+=1
+
+         # Assign first 2 players from the tier to the match
+         for i in range(0, 2):
+            matchInfo["players"].append(playerTiers[tier]['players'].pop(0))
+
+         Matches.matches.append(matchInfo)
+
+      #print(playerTiers[tier])
+   for match in Matches.matches:
+      print(match)
+
 def gameLoop(sock):
    while True:
+
+      # Assign clients to matches
+      assignMatchRoom()
 
       GameState = {"cmd": 1, "players": []}
       clients_lock.acquire()
@@ -134,5 +182,4 @@ def main():
       time.sleep(1/30)
 
 if __name__ == '__main__':
-   #requestAPI()
    main()
