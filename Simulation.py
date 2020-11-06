@@ -1,43 +1,36 @@
 import socket
 import json
 import requests
+from _thread import *
+import threading
+import time   
 
-# def sendConnectMessage(id):
+def connectClientToServer(id, sock):
+	while True:
 
+		server_address = ('localhost', 12345)
+	
+		messageBody = {}
+		messageBody['connect'] = None
+		messageBody['user_id'] = str(id)
 
+		m = json.dumps(messageBody)
+		sock.sendto(bytes(m,'utf8'), server_address)
 
-# try:
-    
-#     message = 'This is the message.  It will be repeated.'
-#     m = json.dumps(message)
-#     sock.sendall(bytes(m,'utf8'))
-#     sock.sendto(bytes(m,'utf8'), ('localhost', 12345))
-
-#     # Look for the response
-#     amount_received = 0
-#     amount_expected = len(message)
-
-# finally:
-#     print >>sys.stderr, 'closing socket'
-    
+		data = sock.recvfrom(1024)
+		print(str(data))
+		time.sleep(1/30)
 
 def main():
-	sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-	server_address = ('localhost', 12345)
-	sock.connect(server_address)
+	for i in range(0, 3):
+		sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+		server_address = ('localhost', 12345)
+		sock.connect(server_address)
 
-	messageBody = {}
-	messageBody['connect'] = None
-	messageBody['user_id'] = '5'
+		start_new_thread(connectClientToServer, (i, sock, ))
 
-	m = json.dumps(messageBody)
-	sock.sendto(bytes(m,'utf8'), ('localhost', 12345))
-
-	data = sock.recvfrom(1024)
-	#responseBody = json.loads(response.content)
-	print(str(data))
-	sock.close()
+	while True:
+		time.sleep(1/30)
 
 if __name__ == '__main__':
-   main()
-   #sendConnectMessage('5')
+	main()
