@@ -30,7 +30,9 @@ def connectionLoop(sock):
       data, addr = sock.recvfrom(1024)
       data = json.loads(data)
 
-      user_profile = requestAPI(data['user_id']);
+      user_profile = requestAPI(data['user_id'])
+
+      user_profile['address'] = addr 
       assignLobbyRoom(user_profile)
 
       # if addr in clients:
@@ -110,7 +112,7 @@ def assignLobbyRoom(user_profile):
    #    print(playerTiers[tier])
    #    print("")
 
-def assignMatchRoom():
+def assignMatchRoom(sock):
    for tier in playerTiers.keys():
       
       # There are more than 3 players waiting in the current tier
@@ -124,8 +126,13 @@ def assignMatchRoom():
 
          Matches.matches.append(matchInfo)
 
+         # Send match info to involved players
+         for player in matchInfo["players"]:
+            m = json.dumps(matchInfo)
+            sock.sendto(bytes(m,'utf8'), player['address'])
+
       # There are two players waiting in the current tier
-      elif len(playerTiers[tier]['players']) == 2 and (datetime.now() - playerTiers[tier]['waitTime']).total_seconds() > 10:
+      elif len(playerTiers[tier]['players']) == 2 and (datetime.now() - playerTiers[tier]['waitTime']).total_seconds() > 5:
          matchInfo = {"matchId" : Matches.numMatches, "players" : [], "results" : {}}
          Matches.numMatches+=1
 
@@ -135,15 +142,23 @@ def assignMatchRoom():
 
          Matches.matches.append(matchInfo)
 
+         # Send match info to involved players
+         for player in matchInfo["players"]:
+            m = json.dumps(matchInfo)
+            sock.sendto(bytes(m,'utf8'), player['address'])
+
       #print(playerTiers[tier])
    for match in Matches.matches:
       print(match)
+
+# def manageMatch(sock, match):
+
 
 def gameLoop(sock):
    while True:
 
       # Assign clients to matches
-      assignMatchRoom()
+      assignMatchRoom(sock)
 
       GameState = {"cmd": 1, "players": []}
       clients_lock.acquire()

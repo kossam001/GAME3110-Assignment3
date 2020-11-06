@@ -16,6 +16,7 @@ def connectClientToServer(id, sock):
 		sock.sendto(bytes(m,'utf8'), server_address)
 
 		data = sock.recvfrom(1024)
+		print("")
 		print(str(data))
 
 def main():
