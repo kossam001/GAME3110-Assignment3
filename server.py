@@ -72,7 +72,7 @@ def cleanClients(sock):
    while True:
       dropped_players = []
       for c in list(clients.keys()):
-         if (datetime.now() - clients[c]['lastBeat']).total_seconds() > 5:
+         if (datetime.now() - clients[c]['lastBeat']).total_seconds() > 10:
 
             # Track dropped player
             player = {}
@@ -125,7 +125,7 @@ def assignMatchRoom(sock):
 
       #print(playerTiers[tier])
    for match in Matches.matches:
-      print("")
+      print(" ")
       print(match)
 
 def generateMatch(sock, tier, numPlayersInMatch):
@@ -149,11 +149,13 @@ def generateMatch(sock, tier, numPlayersInMatch):
       sock.sendto(bytes(m,'utf8'), player['address'])
 
    # Start new thread for the match
-   start_new_thread(gameLoop, (newSock,))
+   start_new_thread(manageMatch, (newSock,))
 
 def manageMatch(sock):
    data, addr = sock.recvfrom(1024)
    data = json.loads(data)
+
+   print(data)
 
 def gameLoop(sock):
    while True:
