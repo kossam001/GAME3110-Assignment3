@@ -15,40 +15,47 @@ clients = {}
 def connectionLoop(sock):
    while True:
       data, addr = sock.recvfrom(1024)
-      data = str(data)
+      data = json.loads(data)
 
-      data = data.split(";")
-      print(data)
+      # data = data.split(", ")
+      user_profile = requestAPI(data['user_id']);
+      print(user_profile)
 
-      if addr in clients:
-         for params in data:
-            if 'heartbeat' in params:
-               clients[addr]['lastBeat'] = datetime.now()
-               
-      else:
-         for params in data:
-            if 'connect' in params:
-               # Fill in client information and add to dict
-               clients[addr] = {}
-               clients[addr]['lastBeat'] = datetime.now()
+      # if addr in clients:
+      #    for params in data:
+      #       if 'heartbeat' in params:
+      #          clients[addr]['lastBeat'] = datetime.now()
+           
+      # else:
+      #    for params in data:
+      #       if 'connect' in params:
+      #          # Fill in client information and add to dict
+      #          clients[addr] = {}
+      #          clients[addr]['lastBeat'] = datetime.now()
 
-               # Initialize message to be sent to new player
-               GameState = {"cmd": 1, "players": []}
+      #          # Initialize message to be sent to new player
+      #          GameState = {"cmd": 1, "players": []}
 
-               # C# Command class, Player class
-               message = {"cmd": 0,"player":{"id":str(addr)}} #0 = new player connected
-               m = json.dumps(message)
-               for c in clients:
-                  sock.sendto(bytes(m,'utf8'), (c[0],c[1])) #0 = address, 1 = port
-                  # Create information about the other clients
-                  player = {}
-                  player['id'] = str(c) # (address, port)
-                  # Add information to message
-                  GameState['players'].append(player)
+      #          # C# Command class, Player class
+      #          message = {"cmd": 0,"player":{"id":str(addr)}} #0 = new player connected
+      #          message["cmd"] = 0
+      #          message["player"] = {"id":str(addr)}
 
-               # Send the new player the clients list
-               new_client_m = json.dumps(GameState)
-               sock.sendto(bytes(new_client_m, 'utf8'), addr)
+      #          m = json.dumps(message)
+      #          for c in clients:
+      #             sock.sendto(bytes(m,'utf8'), (c[0],c[1])) #0 = address, 1 = port
+      #             # Create information about the other clients
+      #             player = {}
+      #             player['id'] = str(c) # (address, port)
+      #             # Add information to message
+      #             GameState['players'].append(player)
+
+      #          # Send the new player the clients list
+      #          new_client_m = json.dumps(GameState)
+      #          sock.sendto(bytes(new_client_m, 'utf8'), addr)
+
+def assignMatchRoom():
+   user_profile = requestAPI();
 
 def cleanClients(sock):
    while True:
@@ -77,27 +84,32 @@ def cleanClients(sock):
 
 def gameLoop(sock):
    while True:
+
       GameState = {"cmd": 1, "players": []}
       clients_lock.acquire()
       print (clients)
+
       for c in clients:
          player = {}
          player['id'] = str(c)
          GameState['players'].append(player)
+      
       s=json.dumps(GameState)
       print(s)
+      
       for c in clients:
          sock.sendto(bytes(s,'utf8'), (c[0],c[1]))
+      
       clients_lock.release()
       time.sleep(1/30)
 
-def requestAPI():
+def requestAPI(id):
    lambdaEndpoint = "https://z67un5qyea.execute-api.us-east-2.amazonaws.com/default/MatchMaking"
-   requestBody = json.dumps({"user_id": "5"})
+   requestBody = json.dumps({"user_id": str(id)})
 
    response = requests.get(lambdaEndpoint, data=requestBody)
    responseBody = json.loads(response.content)
-   print(responseBody)
+   return responseBody
 
 def main():
    port = 12345

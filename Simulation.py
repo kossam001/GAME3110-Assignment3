@@ -6,8 +6,6 @@ import threading
 import time   
 
 def connectClientToServer(id, sock):
-	while True:
-
 		server_address = ('localhost', 12345)
 	
 		messageBody = {}
@@ -19,7 +17,6 @@ def connectClientToServer(id, sock):
 
 		data = sock.recvfrom(1024)
 		print(str(data))
-		time.sleep(1/30)
 
 def main():
 	for i in range(0, 3):
