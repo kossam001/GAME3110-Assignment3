@@ -6,18 +6,24 @@ import threading
 import time   
 
 def connectClientToServer(id, sock):
-		server_address = ('localhost', 12345)
-	
-		messageBody = {}
-		messageBody['connect'] = None
-		messageBody['user_id'] = str(id)
+	server_address = ('localhost', 12345)
 
-		m = json.dumps(messageBody)
-		sock.sendto(bytes(m,'utf8'), server_address)
+	messageBody = {}
+	messageBody['connect'] = None
+	messageBody['user_id'] = str(id)
 
-		data = sock.recvfrom(1024)
-		print("")
-		print(str(data))
+	m = json.dumps(messageBody)
+	sock.sendto(bytes(m,'utf8'), server_address)
+
+	data, matchAddr = sock.recvfrom(1024)
+
+	matchSock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+	matchSock.connect(matchAddr)
+
+	playMatch(matchSock, sock)
+
+def playMatch(matchSock, serverSock):
+	print(1)
 
 def main():
 	for i in range(0, 5):

@@ -117,42 +117,43 @@ def assignMatchRoom(sock):
       
       # There are more than 3 players waiting in the current tier
       if len(playerTiers[tier]['players']) >= 3:
-         matchInfo = {"matchId" : Matches.numMatches, "players" : [], "results" : {}}
-         Matches.numMatches+=1
-
-         # Assign first 3 players from the tier to the match
-         for i in range(0, 3):
-            matchInfo["players"].append(playerTiers[tier]['players'].pop(0))
-
-         Matches.matches.append(matchInfo)
-
-         # Send match info to involved players
-         for player in matchInfo["players"]:
-            m = json.dumps(matchInfo)
-            sock.sendto(bytes(m,'utf8'), player['address'])
+         generateMatch(sock, tier, 3)
 
       # There are two players waiting in the current tier
       elif len(playerTiers[tier]['players']) == 2 and (datetime.now() - playerTiers[tier]['waitTime']).total_seconds() > 5:
-         matchInfo = {"matchId" : Matches.numMatches, "players" : [], "results" : {}}
-         Matches.numMatches+=1
-
-         # Assign first 2 players from the tier to the match
-         for i in range(0, 2):
-            matchInfo["players"].append(playerTiers[tier]['players'].pop(0))
-
-         Matches.matches.append(matchInfo)
-
-         # Send match info to involved players
-         for player in matchInfo["players"]:
-            m = json.dumps(matchInfo)
-            sock.sendto(bytes(m,'utf8'), player['address'])
+         generateMatch(sock, tier, 2)
 
       #print(playerTiers[tier])
    for match in Matches.matches:
+      print("")
       print(match)
 
-# def manageMatch(sock, match):
+def generateMatch(sock, tier, numPlayersInMatch):
+   matchInfo = {"matchId" : Matches.numMatches, "players" : [], "results" : {}}
+   Matches.numMatches+=1
 
+   # Assign first numPlayersInMatch players from the tier to the match
+   for i in range(0, numPlayersInMatch):
+      matchInfo["players"].append(playerTiers[tier]['players'].pop(0))
+
+    # Create a new socket for this match
+   newSock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+   newSock.bind(('',0))
+   matchInfo["matchSocket"] = newSock.getsockname()
+
+   Matches.matches.append(matchInfo)
+
+   # Send match info to involved players
+   for player in matchInfo["players"]:
+      m = json.dumps(matchInfo)
+      sock.sendto(bytes(m,'utf8'), player['address'])
+
+   # Start new thread for the match
+   start_new_thread(gameLoop, (newSock,))
+
+def manageMatch(sock):
+   data, addr = sock.recvfrom(1024)
+   data = json.loads(data)
 
 def gameLoop(sock):
    while True:
