@@ -12,6 +12,8 @@ connected = 0
 
 clients = {}
 
+playerTiers = {500: [], 1000: [], 1500: [], 2000: [], 2500: [], 3000: []}
+
 def connectionLoop(sock):
    while True:
       data, addr = sock.recvfrom(1024)
@@ -19,7 +21,7 @@ def connectionLoop(sock):
 
       # data = data.split(", ")
       user_profile = requestAPI(data['user_id']);
-      print(user_profile)
+      assignMatchRoom(user_profile)
 
       # if addr in clients:
       #    for params in data:
@@ -54,8 +56,18 @@ def connectionLoop(sock):
       #          new_client_m = json.dumps(GameState)
       #          sock.sendto(bytes(new_client_m, 'utf8'), addr)
 
-def assignMatchRoom():
-   user_profile = requestAPI();
+def assignMatchRoom(user_profile):
+
+   rankingScore = user_profile['score']
+
+   # Sort connecting clients into rooms based on their rank score
+   for tier in playerTiers.keys():
+      if int(rankingScore) <= tier:
+         playerTiers[tier].append(user_profile)
+         break
+
+   for tier in playerTiers.keys():
+      print(playerTiers[tier])
 
 def cleanClients(sock):
    while True:

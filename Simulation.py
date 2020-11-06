@@ -19,7 +19,7 @@ def connectClientToServer(id, sock):
 		print(str(data))
 
 def main():
-	for i in range(0, 3):
+	for i in range(0, 5):
 		sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 		server_address = ('localhost', 12345)
 		sock.connect(server_address)
