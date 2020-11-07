@@ -30,6 +30,8 @@ def connectionLoop(sock):
       data, addr = sock.recvfrom(1024)
       data = json.loads(data)
 
+      print(data)
+
       user_profile = requestAPI(data['user_id'])
 
       user_profile['address'] = addr 
@@ -123,13 +125,8 @@ def assignMatchRoom(sock):
       elif len(playerTiers[tier]['players']) == 2 and (datetime.now() - playerTiers[tier]['waitTime']).total_seconds() > 5:
          generateMatch(sock, tier, 2)
 
-      #print(playerTiers[tier])
-   for match in Matches.matches:
-      print(" ")
-      print(match)
-
 def generateMatch(sock, tier, numPlayersInMatch):
-   matchInfo = {"matchId" : Matches.numMatches, "players" : [], "results" : {}}
+   matchInfo = {"matchId" : Matches.numMatches, "players" : [], "results" : {}, "startTime" : str(datetime.now())}
    Matches.numMatches+=1
 
    # Assign first numPlayersInMatch players from the tier to the match

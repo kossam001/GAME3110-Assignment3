@@ -4,8 +4,13 @@ import requests
 from _thread import *
 import threading
 import time   
+import random
 
+match_lock = threading.Lock()
 matches = {}
+
+class Match:
+	numMatches = 0;
 
 def connectClientToServer(id, sock):
 	print("D")
@@ -19,23 +24,25 @@ def connectClientToServer(id, sock):
 	m = json.dumps(messageBody)
 	sock.sendto(bytes(m,'utf8'), server_address)
 
-	data, matchAddr = sock.recvfrom(1024)
+	data, serverAddr = sock.recvfrom(1024)
+	#print(data)
 	data = json.loads(data)
 
-	print(data)
+	matchAddr = (serverAddr[0], data['matchSocket'][1])
+	print(matchAddr)
 
 	# Store match data
 	# That way the clients have access to the same data
-	#match_lock.acquire()
+	match_lock.acquire()
 	matches[data['matchId']] = data
-	#match_lock.release()
+	match_lock.release()
 
 	#print(matches)
 
 	#playMatch(id, data['matchId'], matchSock, sock)
-	start_new_thread(playMatch, (id, data['matchId'], matchAddr, sock,))
+	playMatch(id, data['matchId'], matchAddr, sock,)
 
-	print("C")
+	print(id)
 
 def playMatch(userId, matchId, matchAddr, serverSock):
 	matchSock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -44,18 +51,32 @@ def playMatch(userId, matchId, matchAddr, serverSock):
 	print(" ")
 	#print(matches)
 
-	#match_lock.acquire()
+	match_lock.acquire()
 
 	# First come first serve
 	if (len(matches[matchId]['results']) == 0):
-		matches[matchId]['results'][userId] = 'win'
-	else:
-		matches[matchId]['results'][userId] = 'lose'
+		players = matches[matchId]['players']
 
-	#match_lock.release()
+		# Pick a random winner id
+		randWinner = players[random.randint(0, len(players)-1)]['user_id']
+
+		print(randWinner + " wins")
+
+		matches[matchId]['results'][randWinner] = 'win'
+
+		# Everyone that isn't a winner is a loser
+		for player in players:
+			if (player['user_id'] != randWinner):
+				matches[matchId]['results'][player['user_id']] = 'lose'
 
 	print(" ")
 	print(matches)
+
+	match_lock.release()
+	Match.numMatches+=1;
+
+	m = json.dumps(matches[matchId])
+	matchSock.sendto(bytes(m,'utf8'), matchAddr)
 
 def main():
 	for i in range(0, 6):
