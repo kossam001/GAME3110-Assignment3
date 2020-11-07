@@ -30,45 +30,10 @@ def connectionLoop(sock):
       data, addr = sock.recvfrom(1024)
       data = json.loads(data)
 
-      print(data)
-
       user_profile = requestAPI(data['user_id'])
 
       user_profile['address'] = addr 
       assignLobbyRoom(user_profile)
-
-      # if addr in clients:
-      #    for params in data:
-      #       if 'heartbeat' in params:
-      #          clients[addr]['lastBeat'] = datetime.now()
-           
-      # else:
-      #    for params in data:
-      #       if 'connect' in params:
-      #          # Fill in client information and add to dict
-      #          clients[addr] = {}
-      #          clients[addr]['lastBeat'] = datetime.now()
-
-      #          # Initialize message to be sent to new player
-      #          GameState = {"cmd": 1, "players": []}
-
-      #          # C# Command class, Player class
-      #          message = {"cmd": 0,"player":{"id":str(addr)}} #0 = new player connected
-      #          message["cmd"] = 0
-      #          message["player"] = {"id":str(addr)}
-
-      #          m = json.dumps(message)
-      #          for c in clients:
-      #             sock.sendto(bytes(m,'utf8'), (c[0],c[1])) #0 = address, 1 = port
-      #             # Create information about the other clients
-      #             player = {}
-      #             player['id'] = str(c) # (address, port)
-      #             # Add information to message
-      #             GameState['players'].append(player)
-
-      #          # Send the new player the clients list
-      #          new_client_m = json.dumps(GameState)
-      #          sock.sendto(bytes(new_client_m, 'utf8'), addr)
 
 def cleanClients(sock):
    while True:
@@ -110,10 +75,6 @@ def assignLobbyRoom(user_profile):
          
          break
 
-   # for tier in playerTiers.keys():
-   #    print(playerTiers[tier])
-   #    print("")
-
 def assignMatchRoom(sock):
    for tier in playerTiers.keys():
       
@@ -151,8 +112,15 @@ def generateMatch(sock, tier, numPlayersInMatch):
 def manageMatch(sock):
    data, addr = sock.recvfrom(1024)
    data = json.loads(data)
+   data = json.dumps(data)
 
-   print(data)
+   lambdaEndpoint = "https://ohe5ppwqv2.execute-api.us-east-2.amazonaws.com/default/UpdatePlayerScore"
+   #requestBody = json.dumps({"user_id": str(id)})
+
+   response = requests.get(lambdaEndpoint, data=data)
+   #responseBody = json.loads(response.content)
+
+   print(response.content)
 
 def gameLoop(sock):
    while True:

@@ -37,8 +37,6 @@ def connectClientToServer(id, sock):
 	matches[data['matchId']] = data
 	match_lock.release()
 
-	#print(matches)
-
 	#playMatch(id, data['matchId'], matchSock, sock)
 	playMatch(id, data['matchId'], matchAddr, sock,)
 
@@ -47,9 +45,6 @@ def connectClientToServer(id, sock):
 def playMatch(userId, matchId, matchAddr, serverSock):
 	matchSock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 	matchSock.connect(matchAddr)
-
-	print(" ")
-	#print(matches)
 
 	match_lock.acquire()
 
@@ -70,7 +65,7 @@ def playMatch(userId, matchId, matchAddr, serverSock):
 				matches[matchId]['results'][player['user_id']] = 'lose'
 
 	print(" ")
-	print(matches)
+	print(matches[matchId]['results'])
 
 	match_lock.release()
 	Match.numMatches+=1;
