@@ -14,15 +14,12 @@ clients = {}
 
 class Matches:
    numMatches = 0
-   matches = []
+   matches = {}
 
 playerTiers = {
    500: {'waitTime' : 0, 'players' : []}, 
    1000: {'waitTime' : 0, 'players' : []}, 
-   1500: {'waitTime' : 0, 'players' : []}, 
-   2000: {'waitTime' : 0, 'players' : []}, 
-   2500: {'waitTime' : 0, 'players' : []}, 
-   3000: {'waitTime' : 0, 'players' : []}
+   1500: {'waitTime' : 0, 'players' : []}
    } 
 
 def connectionLoop(sock):
@@ -66,7 +63,7 @@ def assignLobbyRoom(user_profile):
 
    # Sort connecting clients into rooms based on their rank score
    for tier in playerTiers.keys():
-      if int(rankingScore) <= tier:
+      if int(rankingScore) <= tier or tier == 1500:
 
          playerTiers[tier]['players'].append(user_profile) # Add user to tier list
          
@@ -87,7 +84,8 @@ def assignMatchRoom(sock):
          generateMatch(sock, tier, 2)
 
 def generateMatch(sock, tier, numPlayersInMatch):
-   matchInfo = {"matchId" : Matches.numMatches, "players" : [], "results" : {}, "startTime" : str(datetime.now())}
+   matchId = Matches.numMatches
+   matchInfo = {"matchId" : matchId, "players" : [], "results" : {}, "startTime" : str(datetime.now())}
    Matches.numMatches+=1
 
    # Assign first numPlayersInMatch players from the tier to the match
@@ -99,7 +97,7 @@ def generateMatch(sock, tier, numPlayersInMatch):
    newSock.bind(('',0))
    matchInfo["matchSocket"] = newSock.getsockname()
 
-   Matches.matches.append(matchInfo)
+   Matches.matches[matchId] = matchInfo
 
    # Send match info to involved players
    for player in matchInfo["players"]:
@@ -107,20 +105,51 @@ def generateMatch(sock, tier, numPlayersInMatch):
       sock.sendto(bytes(m,'utf8'), player['address'])
 
    # Start new thread for the match
-   start_new_thread(manageMatch, (newSock,))
+   start_new_thread(manageMatch, (newSock, matchId,))
 
-def manageMatch(sock):
-   data, addr = sock.recvfrom(1024)
-   data = json.loads(data)
-   data = json.dumps(data)
+def manageMatch(sock, matchId):
+   matchMsgList = {}
+   playersInMatch = Matches.matches[matchId]["players"]
+   start_new_thread(matchConnectionLoop,(matchMsgList,sock,))
 
-   lambdaEndpoint = "https://ohe5ppwqv2.execute-api.us-east-2.amazonaws.com/default/UpdatePlayerScore"
-   #requestBody = json.dumps({"user_id": str(id)})
+   # Match loop
+   while len(playersInMatch) > 0:
+      
+      
+      # Get all icoming 
+      # while (len(matchEndMsgList) < len(playersInMatch)):
+      #    data, addr = sock.recvfrom(1024)
 
-   response = requests.get(lambdaEndpoint, data=data)
-   #responseBody = json.loads(response.content)
+      #    matchEndMsgList.append(addr)
 
-   print(response.content)
+      if len(matchMsgList) > 0:
+         lambdaEndpoint = "https://ohe5ppwqv2.execute-api.us-east-2.amazonaws.com/default/UpdatePlayerScore"
+         #requestBody = json.dumps({"user_id": str(id)})
+         print(matchMsgList[list(matchMsgList.keys())[0]])
+
+         response = requests.get(lambdaEndpoint, data=matchMsgList[list(matchMsgList.keys())[0]])
+         responseBody = json.loads(response.content)
+         responseBody = json.dumps(responseBody)
+
+         for addr in matchMsgList:
+            #print(response.content)
+            sock.sendto(bytes(responseBody, 'utf8'), addr)
+
+            # Match end - close socket as soon as all players notified
+            playersInMatch = Matches.matches[matchId]["players"]
+            playersInMatch.pop()
+
+   time.sleep(1)
+   sock.close()
+
+def matchConnectionLoop(msgList, sock):
+   while True:
+      try:
+         data, addr = sock.recvfrom(1024)
+         msgList[addr] = data
+      except:
+         print("Match Over")
+         break;
 
 def gameLoop(sock):
    while True:
@@ -130,7 +159,7 @@ def gameLoop(sock):
 
       GameState = {"cmd": 1, "players": []}
       clients_lock.acquire()
-      print (clients)
+      #print (clients)
 
       for c in clients:
          player = {}
@@ -138,7 +167,7 @@ def gameLoop(sock):
          GameState['players'].append(player)
       
       s=json.dumps(GameState)
-      print(s)
+      #print(s)
       
       for c in clients:
          sock.sendto(bytes(s,'utf8'), (c[0],c[1]))

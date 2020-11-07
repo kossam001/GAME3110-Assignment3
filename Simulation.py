@@ -8,18 +8,20 @@ import random
 
 match_lock = threading.Lock()
 matches = {}
+matchLogs = {}
+
+playerIds = []
 
 class Match:
 	numMatches = 0;
 
-def connectClientToServer(id, sock):
-	print("D")
+def connectClientToServer(userId, sock):
 
 	server_address = ('localhost', 12345)
 
 	messageBody = {}
 	messageBody['connect'] = None
-	messageBody['user_id'] = str(id)
+	messageBody['user_id'] = str(userId)
 
 	m = json.dumps(messageBody)
 	sock.sendto(bytes(m,'utf8'), server_address)
@@ -29,7 +31,6 @@ def connectClientToServer(id, sock):
 	data = json.loads(data)
 
 	matchAddr = (serverAddr[0], data['matchSocket'][1])
-	print(matchAddr)
 
 	# Store match data
 	# That way the clients have access to the same data
@@ -38,11 +39,10 @@ def connectClientToServer(id, sock):
 	match_lock.release()
 
 	#playMatch(id, data['matchId'], matchSock, sock)
-	playMatch(id, data['matchId'], matchAddr, sock,)
-
-	print(id)
+	playMatch(userId, data['matchId'], matchAddr, sock,)
 
 def playMatch(userId, matchId, matchAddr, serverSock):
+	print(str(userId) + " Start Match")
 	matchSock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 	matchSock.connect(matchAddr)
 
@@ -64,25 +64,49 @@ def playMatch(userId, matchId, matchAddr, serverSock):
 			if (player['user_id'] != randWinner):
 				matches[matchId]['results'][player['user_id']] = 'lose'
 
-	print(" ")
-	print(matches[matchId]['results'])
-
 	match_lock.release()
-	Match.numMatches+=1;
 
 	m = json.dumps(matches[matchId])
 	matchSock.sendto(bytes(m,'utf8'), matchAddr)
 
-def main():
-	for i in range(0, 6):
-		sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-		server_address = ('localhost', 12345)
-		sock.connect(server_address)
+	# Add result to log
+	data = matchSock.recvfrom(1024)
+	matchSock.close()
 
-		start_new_thread(connectClientToServer, (i, sock, ))
+	print(str(userId) + " End Match")
+
+	if matchId not in matchLogs.keys():
+		Match.numMatches+=1;
+		matchLogs[matchId] = data
+
+	playerIds.append(userId)
+	print(playerIds)
 
 	while True:
 		time.sleep(1/30)
+	# for match in matchLogs.items():
+	# 	print(" ")
+	# 	print(match)
+
+def main():
+	for i in range(0, 10):
+		playerIds.append(i)
+
+	while Match.numMatches <= 10:
+		if (len(playerIds) > 0):
+			i = playerIds.pop()
+
+			sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+			server_address = ('localhost', 12345)
+			sock.connect(server_address)
+
+			start_new_thread(connectClientToServer, (i, sock, ))
+
+	for match in matchLogs.items():
+		print(" ")
+		print(match)
+
+	time.sleep(1/30)
 
 if __name__ == '__main__':
 	main()
