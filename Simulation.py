@@ -27,7 +27,6 @@ def connectClientToServer(userId, sock):
 	sock.sendto(bytes(m,'utf8'), server_address)
 
 	data, serverAddr = sock.recvfrom(1024)
-	#print(data)
 	data = json.loads(data)
 
 	matchAddr = (serverAddr[0], data['matchSocket'][1])
@@ -38,7 +37,6 @@ def connectClientToServer(userId, sock):
 	matches[data['matchId']] = data
 	match_lock.release()
 
-	#playMatch(id, data['matchId'], matchSock, sock)
 	playMatch(userId, data['matchId'], matchAddr, sock,)
 
 def playMatch(userId, matchId, matchAddr, serverSock):
@@ -48,7 +46,6 @@ def playMatch(userId, matchId, matchAddr, serverSock):
 
 	match_lock.acquire()
 
-	# First come first serve
 	if (len(matches[matchId]['results']) == 0):
 		players = matches[matchId]['players']
 
@@ -64,6 +61,8 @@ def playMatch(userId, matchId, matchAddr, serverSock):
 			if (player['user_id'] != randWinner):
 				matches[matchId]['results'][player['user_id']] = 'lose'
 
+		matches[matchId]['matchState'] = "End"
+
 	match_lock.release()
 
 	m = json.dumps(matches[matchId])
@@ -71,28 +70,24 @@ def playMatch(userId, matchId, matchAddr, serverSock):
 
 	# Add result to log
 	data = matchSock.recvfrom(1024)
-	matchSock.close()
 
 	print(str(userId) + " End Match")
 
+	# Since every player will have the same copy of results, use this to keep one copy
 	if matchId not in matchLogs.keys():
 		Match.numMatches+=1;
 		matchLogs[matchId] = data
 
 	playerIds.append(userId)
-	print(playerIds)
 
 	while True:
 		time.sleep(1/30)
-	# for match in matchLogs.items():
-	# 	print(" ")
-	# 	print(match)
 
 def main():
 	for i in range(0, 10):
 		playerIds.append(i)
 
-	while Match.numMatches <= 10:
+	while Match.numMatches < 10:
 		if (len(playerIds) > 0):
 			i = playerIds.pop()
 
@@ -102,9 +97,22 @@ def main():
 
 			start_new_thread(connectClientToServer, (i, sock, ))
 
+	f = open("matchResult.txt", "w")
 	for match in matchLogs.items():
-		print(" ")
+		f.write("\n")
+		f.write("Match ID: " + str(match[0]))
+		f.write("\n")
+
+		for player in (json.loads((match[1])[0]))['players']:
+			f.write(str(player))
+			f.write("\n")
+
+		f.write("\n")
+
+		print("\n")
 		print(match)
+
+	f.close()
 
 	time.sleep(1/30)
 

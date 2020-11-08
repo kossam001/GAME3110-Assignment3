@@ -24,13 +24,20 @@ playerTiers = {
 
 def connectionLoop(sock):
    while True:
+
+      # A player just connected to the server, find a game for them
+
       data, addr = sock.recvfrom(1024)
       data = json.loads(data)
 
+      # Get user info from lambda function
       user_profile = requestAPI(data['user_id'])
 
       user_profile['address'] = addr 
+      user_profile['timeConnected'] = str(datetime.now())
       assignLobbyRoom(user_profile)
+
+      #TODO: check that the player is still waiting in the lobby
 
 def cleanClients(sock):
    while True:
@@ -67,6 +74,7 @@ def assignLobbyRoom(user_profile):
 
          playerTiers[tier]['players'].append(user_profile) # Add user to tier list
          
+         # Player was assigned to an empty lobby, so start tracking wait time here
          if len(playerTiers[tier]['players']) == 1:
             playerTiers[tier]['waitTime'] = datetime.now()
          
@@ -75,11 +83,12 @@ def assignLobbyRoom(user_profile):
 def assignMatchRoom(sock):
    for tier in playerTiers.keys():
       
-      # There are more than 3 players waiting in the current tier
+      # There are more than 3 players waiting in the current tier, so immediately create a match
       if len(playerTiers[tier]['players']) >= 3:
          generateMatch(sock, tier, 3)
 
-      # There are two players waiting in the current tier
+      # There are two players waiting in the current tier, wait for a third unless they have waited too long
+      # If they waited too long, create a match for 2 players
       elif len(playerTiers[tier]['players']) == 2 and (datetime.now() - playerTiers[tier]['waitTime']).total_seconds() > 5:
          generateMatch(sock, tier, 2)
 
@@ -108,51 +117,57 @@ def generateMatch(sock, tier, numPlayersInMatch):
    start_new_thread(manageMatch, (newSock, matchId,))
 
 def manageMatch(sock, matchId):
-   matchMsgList = {}
+   matchMsgList = {'matchState': "Begin", 'players':{}}
    playersInMatch = Matches.matches[matchId]["players"]
    start_new_thread(matchConnectionLoop,(matchMsgList,sock,))
 
+   response = None
+
    # Match loop
    while len(playersInMatch) > 0:
-      
-      
-      # Get all icoming 
-      # while (len(matchEndMsgList) < len(playersInMatch)):
-      #    data, addr = sock.recvfrom(1024)
 
-      #    matchEndMsgList.append(addr)
+      # Process results of the match
+      if len(matchMsgList['players']) > 0:
+         if matchMsgList['matchState'] == "End":
+            lambdaEndpoint = "https://ohe5ppwqv2.execute-api.us-east-2.amazonaws.com/default/UpdatePlayerScore"
 
-      if len(matchMsgList) > 0:
-         lambdaEndpoint = "https://ohe5ppwqv2.execute-api.us-east-2.amazonaws.com/default/UpdatePlayerScore"
-         #requestBody = json.dumps({"user_id": str(id)})
-         print(matchMsgList[list(matchMsgList.keys())[0]])
+            players = matchMsgList['players']
 
-         response = requests.get(lambdaEndpoint, data=matchMsgList[list(matchMsgList.keys())[0]])
-         responseBody = json.loads(response.content)
-         responseBody = json.dumps(responseBody)
+            # Results should be the same across players, so only need to call lambda once
+            if response == None:
+               response = requests.get(lambdaEndpoint, data=players[list(players.keys())[0]])
+               responseBody = json.loads(response.content)
+               responseBody = json.dumps(responseBody)
 
-         for addr in matchMsgList:
-            #print(response.content)
-            sock.sendto(bytes(responseBody, 'utf8'), addr)
+            # Send results to all player to let them know that the match is over
+            for addr in matchMsgList['players']:
+               sock.sendto(bytes(responseBody, 'utf8'), addr)
 
-            # Match end - close socket as soon as all players notified
-            playersInMatch = Matches.matches[matchId]["players"]
-            playersInMatch.pop()
+               # Match end - close socket as soon as all players notified
+               playersInMatch = Matches.matches[matchId]["players"]
+               playersInMatch.pop()
+
+   print(matchMsgList)
 
    time.sleep(1)
    sock.close()
 
 def matchConnectionLoop(msgList, sock):
+   # Loop to process gameplay for the match
+
    while True:
       try:
          data, addr = sock.recvfrom(1024)
-         msgList[addr] = data
+         msgList["matchState"] = json.loads(data)["matchState"]
+         msgList['players'][addr] = data
       except:
          print("Match Over")
          break;
 
 def gameLoop(sock):
    while True:
+
+      # Players have been assigned to lobbies, try to start a match
 
       # Assign clients to matches
       assignMatchRoom(sock)
@@ -184,6 +199,8 @@ def requestAPI(id):
    return responseBody
 
 def main():
+   print("Server started")
+
    port = 12345
    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
    s.bind(('', port))
