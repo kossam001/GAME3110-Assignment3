@@ -26,13 +26,15 @@ def connectionLoop(sock):
    while True:
 
       # A player just connected to the server, find a game for them
-
       data, addr = sock.recvfrom(1024)
       data = json.loads(data)
 
       # Get user info from lambda function
       user_profile = requestAPI(data['user_id'])
-
+      
+      print(user_profile) 
+      print(addr)
+      
       user_profile['address'] = addr 
       user_profile['timeConnected'] = str(datetime.now())
       assignLobbyRoom(user_profile)
@@ -65,7 +67,6 @@ def cleanClients(sock):
       time.sleep(5)
 
 def assignLobbyRoom(user_profile):
-
    rankingScore = user_profile['score']
 
    # Sort connecting clients into rooms based on their rank score
@@ -112,6 +113,7 @@ def generateMatch(sock, tier, numPlayersInMatch):
    for player in matchInfo["players"]:
       m = json.dumps(matchInfo)
       sock.sendto(bytes(m,'utf8'), player['address'])
+      print("Sent matchInfo to " + str(player['address']))
 
    # Start new thread for the match
    start_new_thread(manageMatch, (newSock, matchId,))
@@ -120,6 +122,7 @@ def manageMatch(sock, matchId):
    matchMsgList = {'matchState': "Begin", 'players':{}}
    playersInMatch = Matches.matches[matchId]["players"]
    start_new_thread(matchConnectionLoop,(matchMsgList,sock,))
+   print("matchsocket name " + str(matchId) + " " + str(sock.getsockname()))
 
    response = None
 
@@ -157,6 +160,7 @@ def matchConnectionLoop(msgList, sock):
 
    while True:
       try:
+         print("WAITING ON " + str(sock.getsockname()))
          data, addr = sock.recvfrom(1024)
          msgList["matchState"] = json.loads(data)["matchState"]
          msgList['players'][addr] = data
@@ -190,12 +194,13 @@ def gameLoop(sock):
       clients_lock.release()
       time.sleep(1/30)
 
-def requestAPI(id):
+def requestAPI(userId):
    lambdaEndpoint = "https://z67un5qyea.execute-api.us-east-2.amazonaws.com/default/MatchMaking"
-   requestBody = json.dumps({"user_id": str(id)})
+   requestBody = json.dumps({"user_id": str(userId)})
 
    response = requests.get(lambdaEndpoint, data=requestBody)
    responseBody = json.loads(response.content)
+
    return responseBody
 
 def main():

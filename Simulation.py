@@ -16,10 +16,9 @@ playerIds = []
 class Match:
 	numMatches = 0;
 
+server_address = ('3.130.200.122', 12345)
+
 def connectClientToServer(userId, sock):
-
-	server_address = ('localhost', 12345)
-
 	messageBody = {}
 	messageBody['connect'] = None
 	messageBody['user_id'] = str(userId)
@@ -27,10 +26,13 @@ def connectClientToServer(userId, sock):
 	m = json.dumps(messageBody)
 	sock.sendto(bytes(m,'utf8'), server_address)
 
+	print(str(userId) + " connected to server")
+
 	data, serverAddr = sock.recvfrom(1024)
 	data = json.loads(data)
 
-	matchAddr = (serverAddr[0], data['matchSocket'][1])
+	matchPort = data['matchSocket'][1]
+	print(matchPort)
 
 	# Store match data
 	# That way the clients have access to the same data
@@ -38,12 +40,13 @@ def connectClientToServer(userId, sock):
 	matches[data['matchId']] = data
 	match_lock.release()
 
-	playMatch(userId, data['matchId'], matchAddr, sock,)
+	playMatch(userId, data['matchId'], matchPort, sock,)
 
-def playMatch(userId, matchId, matchAddr, serverSock):
+def playMatch(userId, matchId, matchPort, serverSock):
 	print(str(userId) + " Start Match")
 	matchSock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-	matchSock.connect(matchAddr)
+	matchSock.connect((server_address[0], matchPort))
+	print("match " + str(matchId) + " on socket " + str((server_address[0], matchPort)))
 
 	match_lock.acquire()
 
@@ -64,10 +67,14 @@ def playMatch(userId, matchId, matchAddr, serverSock):
 
 		matches[matchId]['matchState'] = "End"
 
+	#print(str(userId) + " End Match")
 	match_lock.release()
 
 	m = json.dumps(matches[matchId])
-	matchSock.sendto(bytes(m,'utf8'), matchAddr)
+	matchSock.sendto(bytes(m,'utf8'), (server_address[0], matchPort))
+
+	#time.sleep(5)
+	print("Match finish")
 
 	# Add result to log
 	data = matchSock.recvfrom(1024)
@@ -93,7 +100,6 @@ def main(numSimulations):
 			i = playerIds.pop()
 
 			sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-			server_address = ('localhost', 12345)
 			sock.connect(server_address)
 
 			start_new_thread(connectClientToServer, (i, sock, ))
