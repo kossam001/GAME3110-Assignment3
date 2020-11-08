@@ -1,60 +1,6 @@
 
 Match ID: 0
-{'score': '1600', 'losses': '0', 'user_id': '8', 'wins': 1, 'address': ['127.0.0.1', 50337], 'timeConnected': '2020-11-07 22:10:16.517206'}
-{'score': '1450', 'losses': 1, 'user_id': '9', 'wins': '0', 'address': ['127.0.0.1', 50336], 'timeConnected': '2020-11-07 22:10:17.084239'}
-{'score': '1450', 'losses': 1, 'user_id': '5', 'wins': '0', 'address': ['127.0.0.1', 50340], 'timeConnected': '2020-11-07 22:10:18.337310'}
-
-
-Match ID: 1
-{'score': '1100', 'losses': '0', 'user_id': '7', 'wins': 1, 'address': ['127.0.0.1', 50338], 'timeConnected': '2020-11-07 22:10:17.722275'}
-{'score': '950', 'losses': 1, 'user_id': '6', 'wins': '0', 'address': ['127.0.0.1', 50339], 'timeConnected': '2020-11-07 22:10:19.584383'}
-{'score': '950', 'losses': 1, 'user_id': '2', 'wins': '0', 'address': ['127.0.0.1', 50343], 'timeConnected': '2020-11-07 22:10:20.923458'}
-
-
-Match ID: 2
-{'score': '1600', 'losses': '0', 'user_id': '4', 'wins': 1, 'address': ['127.0.0.1', 50341], 'timeConnected': '2020-11-07 22:10:18.925345'}
-{'score': '1450', 'losses': 1, 'user_id': '3', 'wins': '0', 'address': ['127.0.0.1', 50342], 'timeConnected': '2020-11-07 22:10:20.263422'}
-{'score': '1450', 'losses': 1, 'user_id': '5', 'wins': '0', 'address': ['127.0.0.1', 58640], 'timeConnected': '2020-11-07 22:10:22.823032'}
-
-
-Match ID: 3
-{'losses': 1, 'score': '950', 'user_id': '0', 'wins': '0', 'address': ['127.0.0.1', 50345], 'timeConnected': '2020-11-07 22:10:21.574614'}
-{'score': '1100', 'losses': '0', 'user_id': '1', 'wins': 1, 'address': ['127.0.0.1', 50344], 'timeConnected': '2020-11-07 22:10:22.218487'}
-{'score': '950', 'losses': 1, 'user_id': '7', 'wins': '0', 'address': ['127.0.0.1', 58651], 'timeConnected': '2020-11-07 22:10:24.748143'}
-
-
-Match ID: 4
-{'score': '1450', 'losses': 1, 'user_id': '8', 'wins': '0', 'address': ['127.0.0.1', 58641], 'timeConnected': '2020-11-07 22:10:23.504072'}
-{'score': '1450', 'losses': 1, 'user_id': '9', 'wins': '0', 'address': ['127.0.0.1', 58642], 'timeConnected': '2020-11-07 22:10:24.164108'}
-{'score': '1600', 'losses': '0', 'user_id': '4', 'wins': 1, 'address': ['127.0.0.1', 58660], 'timeConnected': '2020-11-07 22:10:26.662251'}
-
-
-Match ID: 5
-{'score': '1100', 'losses': '0', 'user_id': '6', 'wins': 1, 'address': ['127.0.0.1', 58652], 'timeConnected': '2020-11-07 22:10:25.426180'}
-{'score': '950', 'losses': 1, 'user_id': '2', 'wins': '0', 'address': ['127.0.0.1', 58650], 'timeConnected': '2020-11-07 22:10:26.049216'}
-{'score': '950', 'losses': 1, 'user_id': '1', 'wins': '0', 'address': ['127.0.0.1', 58672], 'timeConnected': '2020-11-07 22:10:28.541358'}
-
-
-Match ID: 6
-{'score': '1450', 'losses': 1, 'user_id': '3', 'wins': '0', 'address': ['127.0.0.1', 58661], 'timeConnected': '2020-11-07 22:10:27.305288'}
-{'score': '1600', 'losses': '0', 'user_id': '5', 'wins': 1, 'address': ['127.0.0.1', 58659], 'timeConnected': '2020-11-07 22:10:27.921323'}
-{'score': '1450', 'losses': 1, 'user_id': '8', 'wins': '0', 'address': ['127.0.0.1', 59659], 'timeConnected': '2020-11-07 22:10:30.430466'}
-
-
-Match ID: 7
-{'losses': 1, 'score': '950', 'user_id': '0', 'wins': '0', 'address': ['127.0.0.1', 58671], 'timeConnected': '2020-11-07 22:10:29.183395'}
-{'score': '1100', 'losses': '0', 'user_id': '7', 'wins': 1, 'address': ['127.0.0.1', 58670], 'timeConnected': '2020-11-07 22:10:29.823433'}
-{'score': '950', 'losses': 1, 'user_id': '2', 'wins': '0', 'address': ['127.0.0.1', 59668], 'timeConnected': '2020-11-07 22:10:32.347576'}
-
-
-Match ID: 8
-{'score': '1450', 'losses': 1, 'user_id': '4', 'wins': '0', 'address': ['127.0.0.1', 59660], 'timeConnected': '2020-11-07 22:10:31.103507'}
-{'score': '1450', 'losses': 1, 'user_id': '9', 'wins': '0', 'address': ['127.0.0.1', 59661], 'timeConnected': '2020-11-07 22:10:31.726543'}
-{'score': '1600', 'losses': '0', 'user_id': '5', 'wins': 1, 'address': ['127.0.0.1', 59677], 'timeConnected': '2020-11-07 22:10:34.321690'}
-
-
-Match ID: 9
-{'score': '950', 'losses': 1, 'user_id': '6', 'wins': '0', 'address': ['127.0.0.1', 59670], 'timeConnected': '2020-11-07 22:10:33.016615'}
-{'score': '1100', 'losses': '0', 'user_id': '1', 'wins': 1, 'address': ['127.0.0.1', 59669], 'timeConnected': '2020-11-07 22:10:33.649651'}
-{'score': '950', 'losses': 1, 'user_id': '2', 'wins': '0', 'address': ['127.0.0.1', 60756], 'timeConnected': '2020-11-07 22:10:37.118851'}
+{'losses': '0', 'score': '1100', 'user_id': '0', 'wins': 1, 'address': ['127.0.0.1', 52965], 'timeConnected': '2020-11-07 22:22:53.155900'}
+{'score': '950', 'losses': 1, 'user_id': '1', 'wins': '0', 'address': ['127.0.0.1', 52964], 'timeConnected': '2020-11-07 22:22:53.780936'}
+{'score': '950', 'losses': 1, 'user_id': '2', 'wins': '0', 'address': ['127.0.0.1', 52963], 'timeConnected': '2020-11-07 22:22:54.395973'}
 

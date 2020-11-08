@@ -5,6 +5,7 @@ from _thread import *
 import threading
 import time   
 import random
+import sys
 
 match_lock = threading.Lock()
 matches = {}
@@ -83,11 +84,11 @@ def playMatch(userId, matchId, matchAddr, serverSock):
 	while True:
 		time.sleep(1/30)
 
-def main():
+def main(numSimulations):
 	for i in range(0, 10):
 		playerIds.append(i)
 
-	while Match.numMatches < 10:
+	while Match.numMatches < numSimulations:
 		if (len(playerIds) > 0):
 			i = playerIds.pop()
 
@@ -117,4 +118,7 @@ def main():
 	time.sleep(1/30)
 
 if __name__ == '__main__':
-	main()
+	try:
+		main(int(sys.argv[1]))
+	except:
+		main(10)
